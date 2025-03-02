@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bluesky List Embed</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow-y: auto;
+            height: 500px;
+        }
+        .post {
+            border-bottom: 1px solid #ddd;
+            padding: 10px 0;
+        }
+        .post a {
+            color: #1da1f2;
+            text-decoration: none;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h3>Latest Posts from BreakingNews.News List</h3>
+    <div id="posts">Loading...</div>
+    
+    <script>
+        async function fetchBlueskyList() {
+            const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://bsky.app/profile/breakingnews.news/lists/3lb2itsgzjn2u");
+            const postsContainer = document.getElementById('posts');
+            
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error("Failed to fetch posts");
+                
+                const data = await response.json();
+                const listText = data.contents;
+                const userHandles = [...listText.matchAll(/bsky\.app\/profile\/([a-zA-Z0-9.-]+)/g)]
+                    .map(match => match[1])
+                    .filter((value, index, self) => self.indexOf(value) === index);
+                
+                postsContainer.innerHTML = '';
+                
+                for (const handle of userHandles) {
+                    const userProfileUrl = `https://bsky.app/profile/${handle}`;
+                    const userResponse = await fetch("https://api.allorigins.win/get?url=" + encodeURIComponent(userProfileUrl));
+                    if (!userResponse.ok) throw new Error(`Failed to fetch user profile: ${handle}`);
+                    
+                    const userData = await userResponse.json();
+                    const userText = userData.contents;
+                    const posts = [...userText.matchAll(/<p class=\"[^\"]*\">(.*?)<\/p>/g)]
+                        .map(match => match[1])
+                        .slice(0, 3); 
+                    
+                    posts.forEach(post => {
+                        const postElement = document.createElement('div');
+                        postElement.className = 'post';
+                        postElement.innerHTML = `<p>${post}</p><a href="${userProfileUrl}" target="_blank">View Profile</a>`;
+                        postsContainer.appendChild(postElement);
+                    });
+                }
+            } catch (error) {
+                console.error("Error fetching Bluesky posts:", error);
+                postsContainer.innerHTML = `<p class='error'>Failed to load posts. Please try again later.</p>`;
+            }
+        }
+        
+        fetchBlueskyList();
+    </script>
+</body>
+</html>
