@@ -1,35 +1,28 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Breaking News</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; }
-        .post { border-bottom: 1px solid #ccc; padding: 10px; }
-    </style>
-</head>
-<body>
-    <h3>Latest Posts from BreakingNews.News</h3>
-    <div id="posts">Loading...</div>
+<script>
+    async function fetchBlueskyPosts() {
+        try {
+            const response = await fetch("https://bluesky-auth-worker.chamcgill.workers.dev/");
+            const data = await response.json();
 
-    <script>
-        async function fetchBlueskyPosts() {
-            const response = await fetch("https://bluesky-auth-worker.chamcgill.workers.dev");
-            const posts = await response.json();
             const postsContainer = document.getElementById('posts');
-            postsContainer.innerHTML = '';
+            postsContainer.innerHTML = ''; // Clear loading text
 
-            posts.forEach(post => {
+            data.forEach(post => {
                 const postElement = document.createElement('div');
                 postElement.className = 'post';
-                postElement.innerHTML = `<p>${post.text}</p>
-                <a href="${post.url}" target="_blank">${post.author}</a>`;
+                postElement.innerHTML = `
+                    <p>${post.text}</p>
+                    <a href="${post.url}" target="_blank">View Post</a>
+                    <hr>
+                `;
                 postsContainer.appendChild(postElement);
             });
-        }
 
-        fetchBlueskyPosts();
-    </script>
-</body>
-</html>
+        } catch (error) {
+            console.error("Error fetching Bluesky posts:", error);
+            document.getElementById('posts').innerHTML = `<p class='error'>Failed to load posts.</p>`;
+        }
+    }
+
+    fetchBlueskyPosts();
+</script>
