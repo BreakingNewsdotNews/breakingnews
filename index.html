@@ -5,7 +5,7 @@
             const data = await response.json();
 
             const postsContainer = document.getElementById('posts');
-            postsContainer.innerHTML = ''; // Clear loading text
+            postsContainer.innerHTML = ''; // Clear "Loading..." text
 
             data.forEach(post => {
                 const postElement = document.createElement('div');
