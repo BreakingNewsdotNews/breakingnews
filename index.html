@@ -3,98 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bluesky List Embed</title>
+    <title>Breaking News</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 400px;
-            border: 1px solid #ccc;
-            padding: 10px;
-            overflow-y: auto;
-            height: 500px;
-        }
-        .post {
-            border-bottom: 1px solid #ddd;
-            padding: 10px 0;
-        }
-        .post a {
-            color: #1da1f2;
-            text-decoration: none;
-        }
-        .error {
-            color: red;
-            font-weight: bold;
-        }
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: auto; }
+        .post { border-bottom: 1px solid #ccc; padding: 10px; }
     </style>
 </head>
 <body>
-    <h3>Latest Posts from BreakingNews.News List</h3>
-    <div id="posts">Loading...</div>  <!-- ✅ This fixes the error -->
+    <h3>Latest Posts from BreakingNews.News</h3>
+    <div id="posts">Loading...</div>
 
     <script>
-        async function fetchBlueskyList() {
-            const apiUrl = "https://bsky.social/xrpc/app.bsky.feed.getTimeline";
-            const username = "breakingnews.news"; // Your Bluesky username
-            const password = "ztcu-gbos-ej2c-ehm7"; // Replace with your new API key
+        async function fetchBlueskyPosts() {
+            const response = await fetch("https://bluesky-auth-worker.chamcgill.workers.dev");
+            const posts = await response.json();
+            const postsContainer = document.getElementById('posts');
+            postsContainer.innerHTML = '';
 
-            try {
-                console.log("Authenticating with Bluesky...");
-
-                // Authenticate to get a session token
-                const authResponse = await fetch("https://bsky.social/xrpc/com.atproto.server.createSession", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ identifier: username, password: password })
-                });
-
-                if (!authResponse.ok) {
-                    const errorText = await authResponse.text();
-                    throw new Error("Failed to authenticate. Bluesky says: " + errorText);
-                }
-
-                const authData = await authResponse.json();
-                const accessToken = authData.accessJwt;
-                console.log("✅ Authentication successful. Fetching posts...");
-
-                // Fetch posts using API
-                const response = await fetch(apiUrl, {
-                    headers: { "Authorization": `Bearer ${accessToken}` }
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error("Failed to fetch posts. Bluesky says: " + errorText);
-                }
-
-                const data = await response.json();
-                const postsContainer = document.getElementById('posts');
-
-                if (!postsContainer) {
-                    throw new Error("Element with ID 'posts' not found in HTML.");
-                }
-
-                postsContainer.innerHTML = '';
-
-                if (!data.feed || data.feed.length === 0) {
-                    postsContainer.innerHTML = `<p class='error'>No posts found.</p>`;
-                    return;
-                }
-
-                data.feed.forEach(post => {
-                    const postElement = document.createElement('div');
-                    postElement.className = 'post';
-                    postElement.innerHTML = `<p>${post.post.record.text}</p>
-                        <a href="https://bsky.app/profile/${post.post.author.handle}" target="_blank">View Profile</a>`;
-                    postsContainer.appendChild(postElement);
-                });
-
-            } catch (error) {
-                console.error("Bluesky API Error:", error);
-                document.getElementById('posts').innerHTML = `<p class='error'>${error.message}</p>`;
-            }
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                postElement.innerHTML = `<p>${post.text}</p>
+                <a href="${post.url}" target="_blank">${post.author}</a>`;
+                postsContainer.appendChild(postElement);
+            });
         }
 
-        fetchBlueskyList();
+        fetchBlueskyPosts();
     </script>
 </body>
 </html>
